@@ -52,7 +52,7 @@ class PrivateIngredientsApiTest(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_ingredients_limited_to_user(self):
-        """Test that tags returned are for the authenticated user"""
+        """Test that ingredients returned are for the authenticated user"""
         user2 = get_user_model().objects.create_user(
             'other@test.com',
             'otherpass'
