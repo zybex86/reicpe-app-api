@@ -108,3 +108,62 @@ class PrivateRecipiesApiTest(TestCase):
 
         serializer = RecipeDetailSerializer(recipe)
         self.assertEqual(response.data, serializer.data)
+
+    def test_create_recipe_invalid(self):
+        """Test creating recipe fails"""
+        payload = {'title': ''}
+        response = self.client.post(RECIPIES_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_recipe_successful(self):
+        """Test creating a new recipe"""
+        payload = {
+            'title': 'Peanut Butter Sandwich',
+            'time_minutes': 5,
+            'price': 1.00
+        }
+        response = self.client.post(RECIPIES_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        recipe = Recipe.objects.get(id=response.data['id'])
+        for key in payload.keys():
+            self.assertEqual(payload[key], getattr(recipe, key))
+
+    def test_create_recipe_with_tags(self):
+        """Creating a recipe with tags"""
+        tag1 = sample_tag(user=self.user, name='Vegetarian')
+        tag2 = sample_tag(user=self.user, name='Breakfast')
+        payload = {
+            'title': 'Zuccini Scrambled Eggs',
+            'time_minutes': 10,
+            'price': 3.00,
+            'tags': [tag1.id, tag2.id]
+        }
+        response = self.client.post(RECIPIES_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        recipe = Recipe.objects.get(id=response.data['id'])
+        tags = recipe.tags.all()
+        self.assertAlmostEqual(tags.count(), 2)
+        self.assertIn(tag1, tags)
+        self.assertIn(tag2, tags)
+
+    def test_create_recipe_with_ingredients(self):
+        """Creating a recipe with ingredients"""
+        ingredient1 = sample_ingredient(user=self.user, name='Eggs')
+        ingredient2 = sample_ingredient(user=self.user, name='Zuccini')
+        payload = {
+            'title': 'Zuccini Scrambled Eggs',
+            'time_minutes': 10,
+            'price': 3.00,
+            'ingredients': [ingredient1.id, ingredient2.id]
+        }
+        response = self.client.post(RECIPIES_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        recipe = Recipe.objects.get(id=response.data['id'])
+        ingredients = recipe.ingredients.all()
+        self.assertAlmostEqual(ingredients.count(), 2)
+        self.assertIn(ingredient1, ingredients)
+        self.assertIn(ingredient2, ingredients)
